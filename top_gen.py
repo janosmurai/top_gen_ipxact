@@ -277,5 +277,3 @@ def top_gen_main():
     writeToFile(output, top_gen_path, top_modul_file_name)
 
 top_gen_main()
-
-#pycharm test

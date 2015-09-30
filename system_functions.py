@@ -11,11 +11,9 @@ class System:
         for port in self.portdict:
             if port not in self.bus_interface_dict:
                 if str(self.portdict[port]).split(":")[0] == "in":
-                    inputs.append(port)
+                    inputs.append(port + ":TOP")
                 elif str(self.portdict[port]).split(":")[0] == "out":
-                    outputs.append(str(output_num) + ": " + port)
-                    output_num += 1
+                    outputs.append(port + ":TOP")
                     # TODO: Ha nincs irany meghatarozva -> kulon lekezelni (pl: clk, rst)
 
         self.portlist_to_file = inputs + outputs
-        print("cica")

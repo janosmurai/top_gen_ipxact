@@ -7,9 +7,6 @@ class IPCore:
         self.core_name = core_name
         self.rank = rank
         self.instantiation_name = instantiation_name
-        self.portdict = {}
-        self.paramdict = {}
-        self.bus_interfacesdict = {}
         self.fusesoc_core_path = fusesoc_core_path
         self.ipxact_file = ""
 
@@ -36,10 +33,10 @@ class IPCore:
 
 
     def get_core_ports(self):
-        self.portlist = ipxact_handle.get_port_dict(self.ipxact_file)
-        self.bus_interfaces = ipxact_handle.get_bus_interface_dict(self.ipxact_file)
+        self.portdict = ipxact_handle.get_port_dict(self.ipxact_file)
+        self.bus_interfacesdict = ipxact_handle.get_bus_interface_dict(self.ipxact_file)
 
 
     def get_core_parameters(self):
-        self.paramlist = ipxact_handle.get_parameter_dict(self.ipxact_file)
+        self.paramdict = ipxact_handle.get_parameter_dict(self.ipxact_file)
 

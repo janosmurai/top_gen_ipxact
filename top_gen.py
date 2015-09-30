@@ -203,9 +203,9 @@ class SourcePreparations(object):
 
 
 def print_core_parameters(paramlist, top_gen_path, core_name):
-    f = open(top_gen_path + core_name, "w")
+    f = open(top_gen_path + core_name + "_paramlist", "w")
     for param in paramlist:
-        f.write(param)
+        f.write("." + param + paramlist[param] + "\n")
 
 def print_core_ports(portlist, top_gen_path):
     # Check if connection file exist
@@ -249,9 +249,9 @@ def top_gen_main():
     for i, core_name in enumerate(conf_file_parameters.module_name):
         core = core_functions.IPCore(core_name, conf_file_parameters.rank[i], conf_file_parameters.instantiation_name[i],
                                      sourcePreparations.fusesoc_core_path)
-        system.portdict.update(core.portlist)
-        system.bus_interface_dict.update(core.bus_interfaces)
-        print_core_parameters(core.paramlist, top_gen_path, core.core_name)
+        system.portdict.update(core.portdict)
+        system.bus_interface_dict.update(core.bus_interfacesdict)
+        print_core_parameters(core.paramdict, top_gen_path, core.core_name)
 
     system.create_connection_file()
 

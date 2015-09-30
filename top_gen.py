@@ -166,16 +166,13 @@ def set_includes(is_interactive, auto_mode_param):
 
 
 def writeToFile(output, top_gen_output_path, top_modul_name):
-    output_path = ""
-    for element in top_gen_output_path:
-        output_path += element + "/"
 
-    f = open(output_path + top_modul_name, 'w+')
+    f = open(top_gen_output_path + top_modul_name, 'w+')
     if (f.readlines() != ""):
         f.write("")
     f.close()
 
-    f = open(output_path + top_modul_name, 'a')
+    f = open(top_gen_output_path + top_modul_name, 'a')
     f.write(output)
     f.close()
 
@@ -226,11 +223,10 @@ def top_gen_main():
     top_gen_path_list = top_gen_conf_path.split("/")[:-1]
     top_gen_path = ""
     for element in top_gen_path_list:
-        top_gen_path += element
+        top_gen_path += element + "/"
 
-    port_list = []
 
-    is_interactive = input("Interactive (I) or automatic(A) mode?\n")
+    is_interactive = "A" #TODO: input("Interactive (I) or automatic(A) mode?\n")
     if is_interactive == "I":
         top_modul_file_name = input("Give the top module's filename (with extension): \n")
     else:
@@ -253,8 +249,11 @@ def top_gen_main():
     for i, core_name in enumerate(conf_file_parameters.module_name):
         core = core_functions.IPCore(core_name, conf_file_parameters.rank[i], conf_file_parameters.instantiation_name[i],
                                      sourcePreparations.fusesoc_core_path)
-        system.portlist += core.portlist
+        system.portdict.update(core.portlist)
+        system.bus_interface_dict.update(core.bus_interfaces)
         print_core_parameters(core.paramlist, top_gen_path, core.core_name)
+
+    system.create_connection_file()
 
 
 

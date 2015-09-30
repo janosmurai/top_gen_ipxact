@@ -8,11 +8,8 @@ def handle_conf_file(top_gen_auto_mode_path):
     return auto_mode_param_dict
 
 def create_auto_mode_param_file(top_gen_output_path):
-    auto_mode_param_file_path = ""
     auto_mode_param_file_content = ""
-    for element in top_gen_output_path:
-        auto_mode_param_file_path += element + "/"
-    auto_mode_param_file_path += "auto_mode_params"
+    auto_mode_param_file_path = top_gen_output_path + "auto_mode_params"
     try:
         auto_mode_param_file = open(auto_mode_param_file_path, "r")
         for line in auto_mode_param_file:

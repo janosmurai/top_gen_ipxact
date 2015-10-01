@@ -11,93 +11,46 @@ import system_functions
 import core_functions
 
 
-class IPNode:
-    parameters = []
-    ports = []
-    name = ""
-    connections_to_file = []
-    val = ""
-    output_path = ""
+def get_updated_core_parameters(paramdict, top_gen_path, core_name):
+    updated_paramdict = {}
+    f = open(top_gen_path + core_name + "_paramlist", "r")
+    for line in f:
+        param_type = line.split("(")[0][1:]
+        param_value = line.split("(")[1][:-3].replace("\"", "")
+        for param in paramdict:
+            # Only print out the non default parameters, to avoid redundant information.
+            if param_type.startswith(str(param)):
+                if not paramdict[param] == param_value:
+                    updated_paramdict[param_type] = param_value
+    f.close()
+    return updated_paramdict
 
-    def __init__(self, moduleNode, top_gen_output_path):
+def get_updated_core_ports(top_gen_path):
+    updated_portdict = {}
+    f = open(top_gen_path + "top_connections", "r")
+    for line in f:
+        (port_name, wire_name) = line.split(":")
+        wire_name = str(wire_name).replace("\n", "")
+        print_core_ports(port_name)
 
-        self.top_gen_output_path = top_gen_output_path
-        self.name = moduleNode.name
-        self.portlist = []
-        self.paramlist = []
-        self.connections = []
-
-
-
-
-
-    def set_connections(self, portlist, is_connection_file_exists):
-        for line in portlist:
-            if not "wb" in line:
-                self.connections
-
-    def set_core_params(self, parameterlist):
-        output_path = ""
-        for element in self.top_gen_output_path:
-            output_path += element + "/"
-
-        if os.path.isfile(output_path + self.name + "_paramlist"):
-            print("We found an existing parameter file. (" + self.name + ")\n If the list is ready, please press enter.\n")
-            print("If the list is not up to date, please fix or delete it and restart the process.\n")
-            input()
-        else:
-            f = open(output_path + self.name + "_paramlist", "w")
-            for param in parameterlist:
-                isnumeric = False
-                for num in range(10):
-                    if param.argname.value.startswith(str(num)):
-                        f.write("." + param.paramname.name + "(" + param.argname.value + "),\n")
-                        isnumeric = True
-
-                if not isnumeric:
-                    f.write("." + param.paramname.name + "(\"" + param.argname.value + "\"),\n")
-
-            f.close()
-            print("\nPlease fill up the " + self.name + " cores parameter list, which is available in the output folder.")
-            print("\nFirst the parameter list is filled up with the default values.")
-            input("\nIf the list is ready, please press enter!\n")
-
-    def get_core_params(self, parameterlist):
-        output_path = ""
-        for element in self.top_gen_output_path:
-            output_path += element + "/"
-
-        f = open(output_path + self.name + "_paramlist", "r")
-        for line in f:
-            param_type = line.split("(")[0][1:]
-            param_value = line.split("(")[1][:-3].replace("\"", "")
-            for param in parameterlist:
-                # Only print out the non default parameters, to avoid redundant information.
-                if param_type.startswith(str(param.paramname.name)):
-                    if param.argname.value == param_value:
-                        param.argname.value = ""
-                        param.paramname.name = ""
-                    else:
-                        param.argname.value = param_value
-        f.close()
-
-    def get_connections(self, inst, rank):
-        for line in inst.portlist:
-            if (line.argname.name != "wb_clk") & (line.argname.name != "wb_rst") & ("wb" in line.argname.name):
-                if rank == "slave":
-                    if line.argname.name.endswith("i"):
-                        line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
-                                                                                port=line.argname.name[-5:-2])
-                    else:
-                        line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
-                                                                                port=line.argname.name[-5:-2])
-                else:
-                    if line.argname.name.endswith("o"):
-                        line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
-                                                                                port=line.argname.name[-5:-2])
-                    else:
-                        line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
-                                                                                port=line.argname.name[-5:-2])
+    return updated_portdict
+# def get_connections():
+#     for line in inst.portlist:
+#         if (line.argname.name != "wb_clk") & (line.argname.name != "wb_rst") & ("wb" in line.argname.name):
+#             if rank == "slave":
+#                 if line.argname.name.endswith("i"):
+#                     line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
+#                                                                             port=line.argname.name[-5:-2])
+#                 else:
+#                     line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
+#                                                                             port=line.argname.name[-5:-2])
+#             else:
+#                 if line.argname.name.endswith("o"):
+#                     line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
+#                                                                             port=line.argname.name[-5:-2])
+#                 else:
+#                     line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
+#                                                                             port=line.argname.name[-5:-2])
 
 
 def set_comment_field(is_interactive, auto_mode_param):
@@ -202,18 +155,45 @@ class SourcePreparations(object):
         self.fusesoc_core_path = "/" + str(data_path[2]).split(sep="/", maxsplit=1).pop()[:-1]
 
 
+
 def print_core_parameters(paramlist, top_gen_path, core_name):
-    f = open(top_gen_path + core_name + "_paramlist", "w")
-    for param in paramlist:
-        f.write("." + param + paramlist[param] + "\n")
+
+    if os.path.isfile(top_gen_path + core_name + "_paramlist"):
+        print("We found an existing parameter file. (" + core_name + ")\n If the list is ready, please press enter.\n")
+        print("If the list is not up to date, please fix or delete it and restart the process.\n")
+        input()
+    else:
+        f = open(top_gen_path + core_name + "_paramlist", "w")
+        for param in paramlist:
+            isnumeric = False
+            for num in range(10):
+                if str(paramlist[param]).startswith(str(num)):
+                    f.write("." + param + "(" + paramlist[param] + "),\n")
+                    isnumeric = True
+
+            if not isnumeric:
+                f.write("." + param + "(\"" + paramlist[param] + "\"),\n")
+
+        f.close()
+        print("\nPlease fill up the " + core_name + " cores parameter list, which is available in the output folder.")
+        print("\nFirst the parameter list is filled up with the default values.")
+        input("\nIf the list is ready, please press enter!\n")
+
 
 def print_core_ports(portlist, top_gen_path):
     # Check if connection file exist
     if os.path.isfile(top_gen_path + "top_connections"):
         print("We found an existing connection file. If the list is ready, please enter \"yes\". \n")
-        is_connection_file_exists = input("If the list is not up to date, please fix or delete it and restart the process.\n")
+        input("If the list is not up to date, please fix or delete it and restart the process.\n")
     else:
-        f = open(top_gen_path + "top_connections")
+        f = open(top_gen_path + "top_connections", "w")
+        for port in portlist:
+            f.write(port + "\n")
+        f.close()
+        print("\nPlease fill up the port list, which is available in the output folder.")
+        print("\nFirst the port list is filled up with \"TOP\", which means connection with the FPGA's pins.")
+        input("\nIf the list is ready, please press enter!\n")
+
 
 
 def top_gen_main():
@@ -253,10 +233,12 @@ def top_gen_main():
         system.bus_interface_dict.update(core.bus_interfacesdict)
         print_core_parameters(core.paramdict, top_gen_path, core.core_name)
 
+
     system.create_connection_file()
+    print_core_ports(system.portlist_to_file, top_gen_path)
+    get_updated_core_ports(top_gen_path)
 
-
-
+    get_updated_core_parameters(core.paramdict, top_gen_path, core.core_name)
 
     # Set the comment if any
     output = set_comment_field(is_interactive, auto_mode_params)

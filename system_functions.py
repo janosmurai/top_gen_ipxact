@@ -3,6 +3,7 @@ class System:
         self.portdict = {}
         self.bus_interface_dict = {}
         self.portlist_to_file = []
+        self.updated_portdict = {}
 
     def create_connection_file(self):
         inputs = []

@@ -10,48 +10,15 @@ import ipxact_handle
 import system_functions
 import core_functions
 
-
-def get_updated_core_parameters(paramdict, top_gen_path, core_name):
-    updated_paramdict = {}
-    f = open(top_gen_path + core_name + "_paramlist", "r")
-    for line in f:
-        param_type = line.split("(")[0][1:]
-        param_value = line.split("(")[1][:-3].replace("\"", "")
-        for param in paramdict:
-            # Only print out the non default parameters, to avoid redundant information.
-            if param_type.startswith(str(param)):
-                if not paramdict[param] == param_value:
-                    updated_paramdict[param_type] = param_value
-    f.close()
-    return updated_paramdict
-
 def get_updated_core_ports(top_gen_path):
     updated_portdict = {}
     f = open(top_gen_path + "top_connections", "r")
     for line in f:
         (port_name, wire_name) = line.split(":")
         wire_name = str(wire_name).replace("\n", "")
-        print_core_ports(port_name)
+        updated_portdict[port_name] = wire_name
 
     return updated_portdict
-# def get_connections():
-#     for line in inst.portlist:
-#         if (line.argname.name != "wb_clk") & (line.argname.name != "wb_rst") & ("wb" in line.argname.name):
-#             if rank == "slave":
-#                 if line.argname.name.endswith("i"):
-#                     line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
-#                                                                             port=line.argname.name[-5:-2])
-#                 else:
-#                     line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
-#                                                                             port=line.argname.name[-5:-2])
-#             else:
-#                 if line.argname.name.endswith("o"):
-#                     line.argname.name = "wb_m2s_{modul_name}_{port}".format(modul_name=self.name,
-#                                                                             port=line.argname.name[-5:-2])
-#                 else:
-#                     line.argname.name = "wb_s2m_{modul_name}_{port}".format(modul_name=self.name,
-#                                                                             port=line.argname.name[-5:-2])
-
 
 def set_comment_field(is_interactive, auto_mode_param):
     description_comment = ""
@@ -117,7 +84,6 @@ def set_includes(is_interactive, auto_mode_param):
     top_module_include_list.append("\n")
     return top_module_include_list
 
-
 def writeToFile(output, top_gen_output_path, top_modul_name):
 
     f = open(top_gen_output_path + top_modul_name, 'w+')
@@ -128,7 +94,6 @@ def writeToFile(output, top_gen_output_path, top_modul_name):
     f = open(top_gen_output_path + top_modul_name, 'a')
     f.write(output)
     f.close()
-
 
 class SourcePreparations(object):
 
@@ -153,8 +118,6 @@ class SourcePreparations(object):
 
         self.fusesoc_system_path = "/" + str(data_path[1]).split(sep="/", maxsplit=1).pop()[:-1]
         self.fusesoc_core_path = "/" + str(data_path[2]).split(sep="/", maxsplit=1).pop()[:-1]
-
-
 
 def print_core_parameters(paramlist, top_gen_path, core_name):
 
@@ -198,7 +161,6 @@ def print_core_ports(portlist, top_gen_path):
 
 def top_gen_main():
     auto_mode_params = {}
-    core_inst = ""
     top_gen_conf_path = "/home/murai/openrisc/orpsoc-cores-ng/systems/atlys/top_generating/atlys_topgen" #TODO: input("Give the output folder for the top generation!\n")
     top_gen_path_list = top_gen_conf_path.split("/")[:-1]
     top_gen_path = ""
@@ -234,11 +196,20 @@ def top_gen_main():
         print_core_parameters(core.paramdict, top_gen_path, core.core_name)
 
 
+    system.cores = conf_file_parameters.module_name
+    system.instatiation_names = conf_file_parameters.instantiation_name
+    system.rank = conf_file_parameters.rank
+
     system.create_connection_file()
     print_core_ports(system.portlist_to_file, top_gen_path)
-    get_updated_core_ports(top_gen_path)
+    system.updated_coredict = get_updated_core_ports(top_gen_path)
 
-    get_updated_core_parameters(core.paramdict, top_gen_path, core.core_name)
+    # Iterating through the updated parameterfiles
+    for core_name in conf_file_parameters.module_name:
+        f = open(top_gen_path + core_name + "_paramlist")
+        updated_paramdict = core_functions.get_updated_core_parameters(f, system.default_parameters, top_gen_path, core.core_name)
+        f.close()
+        system.create_common_paramdict(core_name, updated_paramdict)
 
     # Set the comment if any
     output = set_comment_field(is_interactive, auto_mode_params)
@@ -254,7 +225,7 @@ def top_gen_main():
         output += param
 
     # Create the top.v file
-    output += core_inst
+    output += system.create_final_text()
     writeToFile(output, top_gen_path, top_modul_file_name)
 
 top_gen_main()

@@ -40,3 +40,31 @@ class IPCore:
     def get_core_parameters(self):
         self.paramdict = ipxact_handle.get_parameter_dict(self.ipxact_file)
 
+
+def get_updated_core_parameters(f, paramdict, top_gen_path, core_name):
+    # paramdict: contains the default parameters of all the cores.
+    updated_paramdict = {}
+    # Get the appropriate part from the paramdict
+    current_core = False
+    current_params = {}
+    for param in paramdict:
+        if paramdict[param] == "new_core":
+            if param == core_name:
+                current_core = True
+            else:
+                current_core = False
+
+        if current_core:
+            current_params[param] = paramdict[param]
+
+
+    for line in f:
+        param_type = line.split("(")[0][1:]
+        param_value = line.split("(")[1][:-3].replace("\"", "")
+        for param in current_params:
+            # Only print out the non default parameters, to avoid redundant information.
+            if param_type.startswith(str(param)):
+                if not current_params[param] == param_value:
+                    updated_paramdict[param_type] = param_value
+
+    return updated_paramdict

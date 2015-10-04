@@ -193,6 +193,7 @@ def top_gen_main():
                                      sourcePreparations.fusesoc_core_path)
         system.portdict.update(core.portdict)
         system.bus_interface_dict.update(core.bus_interfacedict)
+        system.bus_types.update(core.bus_types)
         print_core_parameters(core.paramdict, top_gen_path, core.core_name)
         # Save all the parameters indicated with the core's name
         for param in core.paramdict:

@@ -10,6 +10,7 @@ class System:
         self.cores = []
         self.instatiation_names = []
         self.rank = []
+        self.bus_types = {}
 
     def create_connection_file(self):
         inputs = []
@@ -25,17 +26,17 @@ class System:
                     inputs.append(port + ":in(TOP)")
                 elif str(self.portdict[port]).split(":")[0] == "out":
                     outputs.append(port + ":out(TOP)")
-                    # TODO: Ha nincs irany meghatarozva -> kulon lekezelni (pl: clk, rst)
-
+                else:
+                    outputs.append(port + ":(TOP)")
         self.portlist_to_file = inputs + outputs
 
     def create_final_text(self):
         final_text = ""
         final_text += self.set_final_wires(final_text)
         for i, core in enumerate(self.cores):
-            final_text += self.set_final_parameters(final_text, i, core)
-            final_text += self.set_final_buses(final_text, core)
-            final_text += self.set_final_ports(final_text, core)
+            final_text = self.set_final_parameters(final_text, i, core)
+            final_text = self.set_final_buses(final_text, core)
+            final_text = self.set_final_ports(final_text, core)
 
         return  final_text
 
@@ -44,14 +45,15 @@ class System:
         # wire = {name, width}
         for wire in self.updated_portdict:
             wire_name = self.updated_portdict[wire]
+            port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
             wire_width = ""
             for port in self.portdict:
-                if port == wire:
+                if port == port_name:
                     wire_width = str(self.portdict[port]).split(":")[1]
             if not wire_width == "0":
-                final_text += "wire\t[" + wire_width + "]\t" + wire_name + "\n"
+                final_text += "wire\t[" + wire_width + ":0]\t" + wire_name + "\n"
             else:
-                final_text += "wire\t\t" + wire_name + "\n"
+                final_text += "wire\t\t\t" + wire_name + "\n"
 
         # TODO: Handle the TOP and NOT_USED options!!!
         return  final_text
@@ -77,32 +79,38 @@ class System:
 
                 if not isnumeric:
                     final_text += "\t." + param + "(\"" + current_params[param] + "\"),\n"
-            final_text += ") " + self.instatiation_names[i] + " (\n"
-        # TODO: Remove the last comma!
+            final_text = final_text[:-2]
+            final_text += "\n) " + self.instatiation_names[i] + " (\n"
         return final_text
 
     def set_final_buses(self, final_text, core):
          # Get the current core buses
         current_buses = {}
+        current_bus_types = []
         for bus in self.bus_interface_dict:
             if str(bus).startswith(core):
                 current_buses.update({str(bus).split(":")[1]: self.bus_interface_dict[bus]})
 
-        # TODO: Sort by bus type
-        for bus in current_buses:
-            direction = str(current_buses[bus]).split(":")[0]
-            bus_name = str(current_buses[bus]).split(":")[2]
-            wire_name = str(bus).split("_")[0]
-            if self.rank == "slave":
-                if direction == "in":
-                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
-                else:
-                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
-            else:
-                if direction == "out":
-                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
-                else:
-                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+        for bus_type in self.bus_types:
+            if self.bus_types[bus_type] == core:
+                current_bus_types.append(bus_type)
+
+        for bus_type in current_bus_types:
+            for bus in current_buses:
+                bus_name = str(current_buses[bus]).split(":")[2]
+                if bus_type == bus_name:
+                    direction = str(current_buses[bus]).split(":")[0]
+                    wire_name = str(bus).split("_")[0]
+                    if self.rank == "slave":
+                        if direction == "in":
+                            final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
+                        else:
+                            final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+                    else:
+                        if direction == "out":
+                            final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
+                        else:
+                            final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
 
         return final_text
 

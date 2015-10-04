@@ -11,6 +11,7 @@ class IPCore:
         self.ipxact_file = ""
         self.bus_interfacedict = {}
         self.portdict = {}
+        self.bus_types = {}
 
         self.look_for_ipxact_file()
         self.get_core_parameters()
@@ -40,9 +41,12 @@ class IPCore:
         for port in tmp_port_dict:
             self.portdict[self.core_name + ":" + port] = tmp_port_dict[port]
 
-        tmp_bus_interface_dict = ipxact_handle.get_bus_interface_dict(self.ipxact_file)
+        tmp_bus_types = ipxact_handle.get_bus_interface_types(self.ipxact_file)
+        tmp_bus_interface_dict = ipxact_handle.get_bus_interface_dict(self.ipxact_file, tmp_bus_types)
         for bus in tmp_bus_interface_dict:
             self.bus_interfacedict[self.core_name + ":" + bus] = tmp_bus_interface_dict[bus]
+        for bus_type in tmp_bus_types:
+            self.bus_types.update({bus_type: self.core_name})
 
 
 

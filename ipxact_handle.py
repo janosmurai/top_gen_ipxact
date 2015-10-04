@@ -49,8 +49,8 @@ def get_parameter_dict(ipxact_path):
                             parameter_dict[name] = value
     return parameter_dict
 
-def get_bus_interface_dict(ipxact_path):
-    bus_interface_dict = {}
+def get_bus_interface_types(ipxact_path):
+
     bus_interface_types = []
 
     tree = ET.parse(ipxact_path)
@@ -73,6 +73,12 @@ def get_bus_interface_dict(ipxact_path):
             corrected_bus_i = corrected_bus_i.replace(" ", "")
             bus_interface_types = corrected_bus_i.split(";")
 
+    return bus_interface_types
+
+def get_bus_interface_dict(ipxact_path, bus_interface_types):
+    bus_interface_dict = {}
+    tree = ET.parse(ipxact_path)
+    root = tree.getroot()
     for component in root:
         if "busInterfaces" in component.tag:
             for busInterface in component:

@@ -9,6 +9,8 @@ class IPCore:
         self.instantiation_name = instantiation_name
         self.fusesoc_core_path = fusesoc_core_path
         self.ipxact_file = ""
+        self.bus_interfacedict = {}
+        self.portdict = {}
 
         self.look_for_ipxact_file()
         self.get_core_parameters()
@@ -33,30 +35,28 @@ class IPCore:
 
 
     def get_core_ports(self):
-        self.portdict = ipxact_handle.get_port_dict(self.ipxact_file)
-        self.bus_interfacesdict = ipxact_handle.get_bus_interface_dict(self.ipxact_file)
+
+        tmp_port_dict = ipxact_handle.get_port_dict(self.ipxact_file)
+        for port in tmp_port_dict:
+            self.portdict[self.core_name + ":" + port] = tmp_port_dict[port]
+
+        tmp_bus_interface_dict = ipxact_handle.get_bus_interface_dict(self.ipxact_file)
+        for bus in tmp_bus_interface_dict:
+            self.bus_interfacedict[self.core_name + ":" + bus] = tmp_bus_interface_dict[bus]
+
 
 
     def get_core_parameters(self):
         self.paramdict = ipxact_handle.get_parameter_dict(self.ipxact_file)
 
 
-def get_updated_core_parameters(f, paramdict, top_gen_path, core_name):
+def get_updated_core_parameters(f, paramdict, core_name):
     # paramdict: contains the default parameters of all the cores.
     updated_paramdict = {}
-    # Get the appropriate part from the paramdict
-    current_core = False
     current_params = {}
     for param in paramdict:
-        if paramdict[param] == "new_core":
-            if param == core_name:
-                current_core = True
-            else:
-                current_core = False
-
-        if current_core:
-            current_params[param] = paramdict[param]
-
+        if str(param).startswith(core_name):
+            current_params.update({str(param).split(":")[1]: paramdict[param]})
 
     for line in f:
         param_type = line.split("(")[0][1:]
@@ -65,6 +65,6 @@ def get_updated_core_parameters(f, paramdict, top_gen_path, core_name):
             # Only print out the non default parameters, to avoid redundant information.
             if param_type.startswith(str(param)):
                 if not current_params[param] == param_value:
-                    updated_paramdict[param_type] = param_value
+                    updated_paramdict[core_name + ":" + param_type] = param_value
 
     return updated_paramdict

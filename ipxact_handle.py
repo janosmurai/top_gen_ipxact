@@ -101,7 +101,7 @@ def get_bus_interface_dict(ipxact_path):
                                                 direction = "in"
                                             elif name.endswith("o"):
                                                 direction = "out"
-                                            actual_bus_interface_dict[name] = direction + ":" + length
+                                            actual_bus_interface_dict[name] = direction + ":" + length + ":" + bus_name
 
                 if bus_name in bus_interface_types:
                     bus_interface_dict.update(actual_bus_interface_dict)

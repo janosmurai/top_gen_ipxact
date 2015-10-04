@@ -14,9 +14,9 @@ def get_updated_core_ports(top_gen_path):
     updated_portdict = {}
     f = open(top_gen_path + "top_connections", "r")
     for line in f:
-        (port_name, wire_name) = line.split(":")
-        wire_name = str(wire_name).replace("\n", "")
-        updated_portdict[port_name] = wire_name
+        (port, wire_name) = line.split("(")
+        wire_name = str(wire_name).replace(")\n", "")
+        updated_portdict[port] = wire_name
 
     return updated_portdict
 
@@ -192,24 +192,29 @@ def top_gen_main():
         core = core_functions.IPCore(core_name, conf_file_parameters.rank[i], conf_file_parameters.instantiation_name[i],
                                      sourcePreparations.fusesoc_core_path)
         system.portdict.update(core.portdict)
-        system.bus_interface_dict.update(core.bus_interfacesdict)
+        system.bus_interface_dict.update(core.bus_interfacedict)
         print_core_parameters(core.paramdict, top_gen_path, core.core_name)
+        # Save all the parameters indicated with the core's name
+        for param in core.paramdict:
+            system.default_parameters.update({core_name + ":" + param: core.paramdict[param]})
 
 
+    # Set the system parameters with the configuration file
     system.cores = conf_file_parameters.module_name
     system.instatiation_names = conf_file_parameters.instantiation_name
     system.rank = conf_file_parameters.rank
 
+
     system.create_connection_file()
     print_core_ports(system.portlist_to_file, top_gen_path)
-    system.updated_coredict = get_updated_core_ports(top_gen_path)
+    system.updated_portdict = get_updated_core_ports(top_gen_path)
 
     # Iterating through the updated parameterfiles
     for core_name in conf_file_parameters.module_name:
         f = open(top_gen_path + core_name + "_paramlist")
-        updated_paramdict = core_functions.get_updated_core_parameters(f, system.default_parameters, top_gen_path, core.core_name)
+        tmp_paramdict = core_functions.get_updated_core_parameters(f, system.default_parameters, core.core_name)
         f.close()
-        system.create_common_paramdict(core_name, updated_paramdict)
+        system.updated_parameters.update(tmp_paramdict)
 
     # Set the comment if any
     output = set_comment_field(is_interactive, auto_mode_params)

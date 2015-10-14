@@ -230,6 +230,7 @@ def top_gen_main():
     for param in top_modul_param_list:
         output += param
 
+
     # Create the top.v file
     output += system.create_final_text()
     writeToFile(output, top_gen_path, top_modul_file_name)

@@ -19,7 +19,7 @@ class IPCore:
 
     def look_for_ipxact_file(self):
         ipxact_list = []
-        for root, dirs, files in os.walk(self.fusesoc_core_path + "/" + self.core_name):
+        for root, dirs, files in os.walk(self.fusesoc_core_path + "/" + self.core_name + "/ip-xact"):
             for file in files:
                 if file.endswith(".xml"):
                     ipxact_list.append(os.path.join(root, file))

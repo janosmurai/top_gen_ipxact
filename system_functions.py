@@ -32,7 +32,8 @@ class System:
 
     def create_final_text(self):
         final_text = ""
-        final_text += self.set_final_wires(final_text)
+        final_text = self.set_top_modul_ports(final_text)
+        final_text = self.set_final_wires(final_text)
         for i, core in enumerate(self.cores):
             final_text = self.set_final_parameters(final_text, i, core)
             final_text = self.set_final_buses(final_text, core)
@@ -40,22 +41,45 @@ class System:
 
         return  final_text
 
+    def set_top_modul_ports(self, final_text):
+        for wire in self.updated_portdict:
+            wire_name = self.updated_portdict[wire]
+            port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
+            port_direction = str(wire).split(":")[2]
+            #Get port width
+            port_width = ""
+            for port in self.portdict:
+                if port in wire:
+                    port_width = str(self.portdict[port]).split(":")[1]
+            if wire_name == "TOP":
+                wire_name = port_name.split(":")[1]
+                if port_width == "0":
+                    final_text += "\t" + port_direction + "put\t\t" + wire_name + "_pin,\n"
+                else:
+                    final_text += "\t" + port_direction + "put [" + port_width + ":0]\t" + wire_name + "_pin,\n"
+        final_text = final_text[:-2]
+        final_text += "\n);\n\n"
+
+        return final_text
+
     def set_final_wires(self, final_text):
         # Initialize wires
         # wire = {name, width}
         for wire in self.updated_portdict:
             wire_name = self.updated_portdict[wire]
             port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
+            if wire_name == "TOP":
+                wire_name = port_name.split(":")[1] + "_pin"
             wire_width = ""
-            for port in self.portdict:
-                if port == port_name:
-                    wire_width = str(self.portdict[port]).split(":")[1]
-            if not wire_width == "0":
-                final_text += "wire\t[" + wire_width + ":0]\t" + wire_name + "\n"
-            else:
-                final_text += "wire\t\t\t" + wire_name + "\n"
+            if not wire_name == "NOT_USED":
+                for port in self.portdict:
+                    if port == port_name:
+                        wire_width = str(self.portdict[port]).split(":")[1]
+                if not wire_width == "0":
+                    final_text += "wire\t[" + wire_width + ":0]\t" + wire_name + "\n"
+                else:
+                    final_text += "wire\t\t" + wire_name + "\n"
 
-        # TODO: Handle the TOP and NOT_USED options!!!
         return  final_text
 
     def set_final_parameters(self, final_text, i, core):
@@ -122,7 +146,10 @@ class System:
                 current_ports.update({str(port).split(":")[1]: self.updated_portdict[port]})
 
         for port in current_ports:
-            final_text += "\t." + port + "(" + current_ports[port] + "),\n"
+            if current_ports[port] == "TOP":
+                final_text += "\t." + port + "(" + port + "_pin),\n"
+            elif not current_ports[port] == "NOT_USED":
+                final_text += "\t." + port + "(" + current_ports[port] + "),\n"
         final_text = final_text[:-2]
         final_text += "\n);"
         return  final_text

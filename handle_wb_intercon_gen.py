@@ -1,8 +1,8 @@
 import os
 
+
 def call_wb_intercon_gen(top_gen_path):
-    wb_intercon_path = os.getcwd()
-    wb_intercon_path += "/wb_intercon_gen/"
+    wb_intercon_path = os.getcwd() + "/wb_intercon_gen/"
     system_path_list = top_gen_path.split("/")[:-2]
     rtl_path = ""
     for element in system_path_list:
@@ -12,5 +12,27 @@ def call_wb_intercon_gen(top_gen_path):
               "/wb_intercon.v")
 
 
+def create_wb_intercon_conf(core_names, ranks):
+    wb_intercon_path = os.getcwd() + "/wb_intercon_gen/"
 
-call_wb_intercon_gen("/home/murai/openrisc/orpsoc-cores-ng/systems/atlys/top_generating/atlys_topgen")
+    # Get the masters
+    wb_conf = "; --- MASTRERS ---"
+    for core_name in core_names:
+        if ranks[core_name] == "master":
+            wb_conf += "[master " + core_name + "]\nslaves = \n \n"
+
+    # Get the slaves
+    wb_conf += "; --- SLAVES ---"
+    for core_name in core_names:
+        if ranks[core_name] == "slave":
+            wb_conf += "[master " + core_name + "]\ndatawidth = \noffset = \nsize = \n"
+
+    if os.path.isfile(wb_intercon_path + "wb_intercon.conf"):
+        print("We found an existing config file.\n If the file is ready, please press enter.\n")
+        input("If the file is not up to date, please fix or delete it and restart the process.\n")
+    else:
+        f = open(wb_intercon_path +  "wb_intercon.conf", "w")
+        f.write(wb_conf)
+        f.close()
+        print("\nPlease fill up the config file, which is available in the " + wb_intercon_path + " folder.")
+        input("\nIf the list is ready, please press enter!\n")

@@ -6,7 +6,7 @@ import os
 
 import handle_conf_file
 import automatic_mode_functions
-import ipxact_handle
+import handle_wb_intercon_gen
 import system_functions
 import core_functions
 
@@ -86,12 +86,20 @@ def set_includes(is_interactive, auto_mode_param):
 
 def writeToFile(output, top_gen_output_path, top_modul_name):
 
-    f = open(top_gen_output_path + top_modul_name, 'w+')
+    # Set the path of the output
+    top_gen_output_path_list = top_gen_output_path.split("/")[1:-2]
+    rtl_path = ""
+    for element in top_gen_output_path_list:
+        rtl_path += "/" + element
+    rtl_path += "/rtl/verilog/"
+
+
+    f = open(rtl_path + top_modul_name, 'w+')
     if (f.readlines() != ""):
         f.write("")
     f.close()
 
-    f = open(top_gen_output_path + top_modul_name, 'a')
+    f = open(rtl_path + top_modul_name, 'a')
     f.write(output)
     f.close()
 
@@ -239,5 +247,6 @@ def top_gen_main():
     # TODO: Implement conf file creation!
 
     # Call the wb_intercon_gen script
+    handle_wb_intercon_gen.call_wb_intercon_gen(top_gen_path)
 
 top_gen_main()

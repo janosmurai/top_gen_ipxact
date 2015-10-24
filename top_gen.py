@@ -235,4 +235,9 @@ def top_gen_main():
     output += system.create_final_text()
     writeToFile(output, top_gen_path, top_modul_file_name)
 
+    # Create conf file for wb_intercon_gen
+    # TODO: Implement conf file creation!
+
+    # Call the wb_intercon_gen script
+
 top_gen_main()

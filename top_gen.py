@@ -244,7 +244,7 @@ def top_gen_main():
     writeToFile(output, top_gen_path, top_modul_file_name)
 
     # Create conf file for wb_intercon_gen
-    # TODO: Implement conf file creation!
+    handle_wb_intercon_gen.create_wb_intercon_conf(system.cores, system.rank)
 
     # Call the wb_intercon_gen script
     handle_wb_intercon_gen.call_wb_intercon_gen(top_gen_path)

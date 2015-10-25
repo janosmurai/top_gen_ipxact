@@ -64,11 +64,13 @@ def get_bus_interface_types(ipxact_path):
                             bus_interface_types.append(element.text)
 
     if len(bus_interface_types) > 1:
-        print("We found more then one bus interface:\n")
+
+        print("We found more then one bus interface:")
         for bus_i in bus_interface_types:
             print(bus_i)
-        corrected_bus_i = input("Type the names of the desired bus interfaces, separated with a semicolon!\nIf you want them "
-                                "all, then just press enter!\n")
+        #print("Type the names of the desired bus interfaces, separated with a semicolon!")
+        #TODO: Find out why input doesn't work here....
+        corrected_bus_i = ""
         if not corrected_bus_i == "":
             corrected_bus_i = corrected_bus_i.replace(" ", "")
             bus_interface_types = corrected_bus_i.split(";")

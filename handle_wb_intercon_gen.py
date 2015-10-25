@@ -16,22 +16,22 @@ def create_wb_intercon_conf(core_names, ranks):
     wb_intercon_path = os.getcwd() + "/wb_intercon_gen/"
 
     # Get the masters
-    wb_conf = "; --- MASTRERS ---"
-    for core_name in core_names:
-        if ranks[core_name] == "master":
+    wb_conf = "; --- MASTRERS ---\n"
+    for i, core_name in enumerate(core_names):
+        if ranks[i] == "master":
             wb_conf += "[master " + core_name + "]\nslaves = \n \n"
 
     # Get the slaves
-    wb_conf += "; --- SLAVES ---"
-    for core_name in core_names:
-        if ranks[core_name] == "slave":
-            wb_conf += "[master " + core_name + "]\ndatawidth = \noffset = \nsize = \n"
+    wb_conf += "; --- SLAVES ---\n"
+    for i, core_name in enumerate(core_names):
+        if ranks[i] == "slave":
+            wb_conf += "[slave " + core_name + "]\ndatawidth = \noffset = \nsize = \n"
 
     if os.path.isfile(wb_intercon_path + "wb_intercon.conf"):
         print("We found an existing config file.\n If the file is ready, please press enter.\n")
         input("If the file is not up to date, please fix or delete it and restart the process.\n")
     else:
-        f = open(wb_intercon_path +  "wb_intercon.conf", "w")
+        f = open(wb_intercon_path + "wb_intercon.conf", "w")
         f.write(wb_conf)
         f.close()
         print("\nPlease fill up the config file, which is available in the " + wb_intercon_path + " folder.")

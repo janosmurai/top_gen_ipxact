@@ -91,7 +91,7 @@ class System:
 
         # If only the current core name is in the parameter list
         if len(current_params) == 0:
-            final_text += core + " " + self.instatiation_names[i] + "(\n"
+            final_text += "\n" + core + " " + self.instatiation_names[i] + "(\n"
         else:
             final_text += core + " #(\n"
             for param in current_params:

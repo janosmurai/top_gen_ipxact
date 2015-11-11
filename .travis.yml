@@ -1,3 +1,4 @@
+GET https://codecov.io/api/:service/:janosmurai
 install:
     pip install codecov
 after_success:

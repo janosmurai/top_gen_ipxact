@@ -34,5 +34,5 @@ def create_wb_intercon_conf(core_names, ranks):
         f = open(wb_intercon_path + "wb_intercon.conf", "w")
         f.write(wb_conf)
         f.close()
-        print("\nPlease fill up the config file, which is available in the " + wb_intercon_path + " folder.")
-        input("\nIf the list is ready, please press enter!\n")
+    print("\nPlease fill up the config file, which is available in the " + wb_intercon_path + " folder.")
+    input("\nIf the list is ready, please press enter!\n")

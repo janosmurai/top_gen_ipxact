@@ -49,8 +49,13 @@ def get_parameter_dict(ipxact_path):
                             parameter_dict[name] = value
     return parameter_dict
 
-def get_bus_interface_types(ipxact_path):
+def get_bus_interface_types(ipxact_path, system_buses):
+    # Remove spaces and new lines
+    system_buses = str(system_buses[:-1]).replace(" ", "")
 
+    system_buses_list = str(system_buses).split(",")
+
+    bus_interface_types_ipxact = []
     bus_interface_types = []
 
     tree = ET.parse(ipxact_path)
@@ -61,19 +66,11 @@ def get_bus_interface_types(ipxact_path):
                 if "busInterface" in busInterface.tag:
                     for element in busInterface:
                         if "name" in element.tag:
-                            bus_interface_types.append(element.text)
+                            bus_interface_types_ipxact.append(element.text)
 
-    if len(bus_interface_types) > 1:
-
-        print("We found more then one bus interface:")
-        for bus_i in bus_interface_types:
-            print(bus_i)
-        #print("Type the names of the desired bus interfaces, separated with a semicolon!")
-        #TODO: Find out why input doesn't work here....
-        corrected_bus_i = ""
-        if not corrected_bus_i == "":
-            corrected_bus_i = corrected_bus_i.replace(" ", "")
-            bus_interface_types = corrected_bus_i.split(";")
+    for bus in bus_interface_types_ipxact:
+        if bus in system_buses_list:
+            bus_interface_types.append(bus)
 
     return bus_interface_types
 

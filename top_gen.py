@@ -14,9 +14,10 @@ def get_updated_core_ports(top_gen_path):
     updated_portdict = {}
     f = open(top_gen_path + "top_connections", "r")
     for line in f:
-        (port, wire_name) = line.split("(")
-        wire_name = str(wire_name).replace(")\n", "")
-        updated_portdict[port] = wire_name
+        if not (line.startswith("---") or line.startswith("\n")):
+            (port, wire_name) = line.split("(")
+            wire_name = str(wire_name).replace(")\n", "")
+            updated_portdict[port] = wire_name
 
     return updated_portdict
 
@@ -195,13 +196,15 @@ def top_gen_main():
     # Create the system
     system = system_functions.System()
 
+    # Get the system buses
+    system.bus_types = auto_mode_params["System buses"]
+
     # Iterating through the cores
     for i, core_name in enumerate(conf_file_parameters.module_name):
         core = core_functions.IPCore(core_name, conf_file_parameters.rank[i], conf_file_parameters.instantiation_name[i],
-                                     sourcePreparations.fusesoc_core_path)
+                                     sourcePreparations.fusesoc_core_path, system.bus_types)
         system.portdict.update(core.portdict)
         system.bus_interface_dict.update(core.bus_interfacedict)
-        system.bus_types.update(core.bus_types)
         print_core_parameters(core.paramdict, top_gen_path, core.core_name)
         # Save all the parameters indicated with the core's name
         for param in core.paramdict:

@@ -10,16 +10,19 @@ class System:
         self.cores = []
         self.instatiation_names = []
         self.rank = []
-        self.bus_types = {}
+        self.bus_types = ""
 
     def create_connection_file(self):
         inputs = []
         outputs = []
+        inputs.append("--- INPUTS ---\n")
+        outputs.append("\n--- OUTPUTS ---\n")
+
         interface_list = []
         for bus in self.bus_interface_dict:
             interface_list.append(str(bus).split(":")[1])
 
-        for port in self.portdict:
+        for port in sorted(self.portdict):
             port_name = str(port).split(":")[1]
             if port_name not in interface_list:
                 if str(self.portdict[port]).split(":")[0] == "in":
@@ -42,6 +45,9 @@ class System:
         return  final_text
 
     def set_top_modul_ports(self, final_text):
+        inputs = ""
+        outputs = ""
+        inouts = ""
         for wire in self.updated_portdict:
             wire_name = self.updated_portdict[wire]
             port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
@@ -54,9 +60,20 @@ class System:
             if wire_name == "TOP":
                 wire_name = port_name.split(":")[1]
                 if port_width == "0":
-                    final_text += "\t" + port_direction + "put\t\t" + wire_name + "_pin,\n"
+                    if port_direction == "in":
+                        inputs += "\t" + port_direction + "put\t\t" + wire_name + "_pin,\n"
+                    elif port_direction == "out":
+                        outputs += "\t" + port_direction + "put\t\t" + wire_name + "_pin,\n"
+                    else:
+                        inouts += "\tinout\t\t" + wire_name + "_pin,\n"
                 else:
-                    final_text += "\t" + port_direction + "put [" + port_width + ":0]\t" + wire_name + "_pin,\n"
+                    if port_direction == "in":
+                        inputs += "\t" + port_direction + "put [" + port_width + ":0]\t" + wire_name + "_pin,\n"
+                    elif port_direction == "out":
+                        outputs += "\t" + port_direction + "put [" + port_width + ":0]\t" + wire_name + "_pin,\n"
+                    else:
+                        inouts += "\tinout [" + port_width + ":0]\t" + wire_name + "_pin,\n"
+        final_text = inputs + outputs + inouts
         final_text = final_text[:-2]
         final_text += "\n);\n\n"
 
@@ -110,31 +127,24 @@ class System:
     def set_final_buses(self, final_text, core):
          # Get the current core buses
         current_buses = {}
-        current_bus_types = []
         for bus in self.bus_interface_dict:
             if str(bus).startswith(core):
                 current_buses.update({str(bus).split(":")[1]: self.bus_interface_dict[bus]})
 
-        for bus_type in self.bus_types:
-            if self.bus_types[bus_type] == core:
-                current_bus_types.append(bus_type)
-
-        for bus_type in current_bus_types:
-            for bus in current_buses:
-                bus_name = str(current_buses[bus]).split(":")[2]
-                if bus_type == bus_name:
-                    direction = str(current_buses[bus]).split(":")[0]
-                    wire_name = str(bus).split("_")[0]
-                    if self.rank == "slave":
-                        if direction == "in":
-                            final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
-                        else:
-                            final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
-                    else:
-                        if direction == "out":
-                            final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
-                        else:
-                            final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+        for bus in current_buses:
+            bus_name = str(current_buses[bus]).split(":")[2]
+            direction = str(current_buses[bus]).split(":")[0]
+            wire_name = str(bus).split("_")[0]
+            if self.rank == "slave":
+                if direction == "in":
+                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
+                else:
+                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+            else:
+                if direction == "out":
+                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
+                else:
+                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
 
         return final_text
 

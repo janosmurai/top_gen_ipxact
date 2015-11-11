@@ -1,5 +1,13 @@
-GET https://codecov.io/api/:service/:janosmurai
+language: python
+
+python:
+  - 3.5
+
 install:
-    pip install codecov
+  - pip install codecov
+
+script:
+  - coverage run top_gen.py
+
 after_success:
-    codecov
+  - codecov

@@ -8,7 +8,7 @@ def call_wb_intercon_gen(top_gen_path):
     for element in system_path_list:
         rtl_path += "/" + element
     rtl_path += "/rtl/verilog"
-    os.system("python3.4 " + wb_intercon_path + "wb_intercon_gen " + wb_intercon_path + "wb_intercon.conf " + rtl_path +
+    os.system("python " + wb_intercon_path + "wb_intercon_gen " + wb_intercon_path + "wb_intercon.conf " + rtl_path +
               "/wb_intercon.v")
 
 

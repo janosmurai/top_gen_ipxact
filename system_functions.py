@@ -33,16 +33,19 @@ class System:
                     outputs.append(port + ":(TOP)")
         self.portlist_to_file = inputs + outputs
 
-    def create_final_text(self):
+    def create_final_text(self, top_module_include):
         final_text = ""
         final_text = self.set_top_modul_ports(final_text)
+        final_text = self.set_includes(final_text, top_module_include)
         final_text = self.set_final_wires(final_text)
         for i, core in enumerate(self.cores):
             final_text = self.set_final_parameters(final_text, i, core)
             final_text = self.set_final_buses(final_text, core)
             final_text = self.set_final_ports(final_text, core)
 
-        return  final_text
+        final_text += "\nendmodule"
+
+        return final_text
 
     def set_top_modul_ports(self, final_text):
         inputs = ""
@@ -52,7 +55,7 @@ class System:
             wire_name = self.updated_portdict[wire]
             port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
             port_direction = str(wire).split(":")[2]
-            #Get port width
+            # Get port width
             port_width = ""
             for port in self.portdict:
                 if port in wire:
@@ -79,6 +82,21 @@ class System:
 
         return final_text
 
+    def set_includes(self, final_text, top_module_include):
+        # Removing spaces and new lines
+        top_module_include = top_module_include.replace(" ", "")
+        top_module_include = top_module_include.replace("\n", "")
+
+        top_module_include_separated = top_module_include.split(";")
+
+        final_text += "\n"
+        if not top_module_include_separated == [""]:
+            for element in top_module_include_separated:
+                final_text += "`include \"" + element + "\"\n"
+        final_text += "\n"
+
+        return final_text
+
     def set_final_wires(self, final_text):
         # Initialize wires
         # wire = {name, width}
@@ -93,11 +111,11 @@ class System:
                     if port == port_name:
                         wire_width = str(self.portdict[port]).split(":")[1]
                 if not wire_width == "0":
-                    final_text += "wire\t[" + wire_width + ":0]\t" + wire_name + "\n"
+                    final_text += "wire\t[" + wire_width + ":0]\t" + wire_name + ";\n"
                 else:
-                    final_text += "wire\t\t" + wire_name + "\n"
+                    final_text += "wire\t\t" + wire_name + ";\n"
 
-        return  final_text
+        return final_text
 
     def set_final_parameters(self, final_text, i, core):
         # Get the current core parameters
@@ -125,31 +143,40 @@ class System:
         return final_text
 
     def set_final_buses(self, final_text, core):
-         # Get the current core buses
+        # Get the current core buses
         current_buses = {}
         for bus in self.bus_interface_dict:
             if str(bus).startswith(core):
                 current_buses.update({str(bus).split(":")[1]: self.bus_interface_dict[bus]})
 
         for bus in current_buses:
-            bus_name = str(current_buses[bus]).split(":")[2]
-            direction = str(current_buses[bus]).split(":")[0]
-            wire_name = str(bus).split("_")[0]
-            if self.rank == "slave":
-                if direction == "in":
-                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
-                else:
-                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+            bus_name = (str(current_buses[bus]).split(":")[2]).split("_")[0]
+            try:
+                bus_type = (str(current_buses[bus]).split(":")[2]).split("_")[1]
+            # TODO: Only wb_sys, wb_d, wb_i bus types are available.
+            except:
+                bus_type = "d"
+
+            if bus_type == 'sys':
+                final_text += "\t." + bus + "\t(wb_" + bus + "),\n"
             else:
-                if direction == "out":
-                    final_text += "\t." + bus + "(" + bus_name + "_m2s_" + core + wire_name + "),\n"
+                wire_name = str(bus).split("_")[1]
+                direction = str(current_buses[bus]).split(":")[0]
+                if self.rank == "slave":
+                    if direction == "in":
+                        final_text += "\t." + bus + "\t(" + bus_name + "_m2s_" + core + "_" + bus_type + "_" + wire_name + "),\n"
+                    else:
+                        final_text += "\t." + bus + "\t(" + bus_name + "_s2m_" + core + "_" + bus_type + "_" + wire_name + "),\n"
                 else:
-                    final_text += "\t." + bus + "(" + bus_name + "_s2m_" + core + wire_name + "),\n"
+                    if direction == "out":
+                        final_text += "\t." + bus + "\t(" + bus_name + "_m2s_" + core + "_" + bus_type + "_" + wire_name + "),\n"
+                    else:
+                        final_text += "\t." + bus + "\t(" + bus_name + "_s2m_" + core + "_" + bus_type + "_" + wire_name + "),\n"
 
         return final_text
 
     def set_final_ports(self, final_text, core):
-         # Get the current core ports
+        # Get the current core ports
         current_ports = {}
         for port in self.updated_portdict:
             if str(port).startswith(core):
@@ -162,4 +189,4 @@ class System:
                 final_text += "\t." + port + "(" + current_ports[port] + "),\n"
         final_text = final_text[:-2]
         final_text += "\n);"
-        return  final_text
+        return final_text

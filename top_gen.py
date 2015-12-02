@@ -67,23 +67,6 @@ def set_top_modul_params(is_interactive, auto_mode_param):
         top_modul_param_list_out.append(")(\n")
     return top_modul_param_list_out
 
-def set_includes(is_interactive, auto_mode_param):
-    if is_interactive == "I":
-        print("If you would like to include core files, please type the name, separated with a semicolon, then press enter\n")
-        print("(For example: core1.v; core2.v)\n")
-        top_module_include = input("If you would not like to include anything, please press enter!\n")
-    else:
-        top_module_include = auto_mode_param["Files to include"]
-    top_module_include = top_module_include.replace(" ", "")
-    top_module_include = top_module_include.replace("\n", "")
-    top_module_include_separated = top_module_include.split(";")
-    top_module_include_list = []
-    top_module_include_list.append("\n")
-    if not top_module_include_separated == [""]:
-        for element in top_module_include_separated:
-            top_module_include_list.append("`include \"" + element + "\"\n")
-    top_module_include_list.append("\n")
-    return top_module_include_list
 
 def writeToFile(output, top_gen_output_path, top_modul_name):
 
@@ -133,7 +116,7 @@ def print_core_parameters(paramlist, top_gen_path, core_name):
     if os.path.isfile(top_gen_path + core_name + "_paramlist"):
         print("We found an existing parameter file. (" + core_name + ")\n If the list is ready, please press enter.\n")
         print("If the list is not up to date, please fix or delete it and restart the process.\n")
-        input()
+        tmp = input()
     else:
         f = open(top_gen_path + core_name + "_paramlist", "w")
         for param in paramlist:
@@ -170,7 +153,10 @@ def print_core_ports(portlist, top_gen_path):
 
 def top_gen_main():
     auto_mode_params = {}
-    top_gen_conf_path = "/home/murai/openrisc/orpsoc-cores-ng/systems/atlys/top_generating/atlys_topgen" #TODO: input("Give the output folder for the top generation!\n")
+    top_gen_conf_path = "/home/murai/openrisc/orpsoc-cores-ng/systems/logsys_spartan_6/top_generating/logsys_spartan_6_topgen"
+    #TODO: input(
+    # "Give the
+    # output folder for the top generation!\n")
     top_gen_path_list = top_gen_conf_path.split("/")[:-1]
     top_gen_path = ""
     for element in top_gen_path_list:
@@ -224,17 +210,12 @@ def top_gen_main():
     # Iterating through the updated parameterfiles
     for core_name in conf_file_parameters.module_name:
         f = open(top_gen_path + core_name + "_paramlist")
-        tmp_paramdict = core_functions.get_updated_core_parameters(f, system.default_parameters, core.core_name)
+        tmp_paramdict = core_functions.get_updated_core_parameters(f, system.default_parameters, core_name)
         f.close()
         system.updated_parameters.update(tmp_paramdict)
 
     # Set the comment if any
     output = set_comment_field(is_interactive, auto_mode_params)
-
-    # Set the top module's includes if any/home/murai/openrisc/top_gen_fusesoc/top_gen_fusesoc
-    top_modul_include_list = set_includes(is_interactive, auto_mode_params)
-    for element in top_modul_include_list:
-        output += element
 
     # Set the top module's parameters if any
     top_modul_param_list = set_top_modul_params(is_interactive, auto_mode_params)
@@ -243,7 +224,7 @@ def top_gen_main():
 
 
     # Create the top.v file
-    output += system.create_final_text()
+    output += system.create_final_text(auto_mode_params["Files to include"])
     writeToFile(output, top_gen_path, top_modul_file_name)
 
     # Create conf file for wb_intercon_gen

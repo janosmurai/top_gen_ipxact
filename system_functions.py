@@ -23,8 +23,7 @@ class System:
             interface_list.append(str(bus).split(":")[1])
 
         for port in sorted(self.portdict):
-            port_name = str(port).split(":")[1]
-            if port_name not in interface_list:
+            if port not in self.bus_interface_dict:
                 if str(self.portdict[port]).split(":")[0] == "in":
                     inputs.append(port + ":in(TOP)")
                 elif str(self.portdict[port]).split(":")[0] == "out":
@@ -103,10 +102,18 @@ class System:
         for wire in self.updated_portdict:
             wire_name = self.updated_portdict[wire]
             port_name = str(wire).split(":")[0] + ":" + str(wire).split(":")[1]
-            if wire_name == "TOP":
-                wire_name = port_name.split(":")[1] + "_pin"
             wire_width = ""
-            if not wire_name == "NOT_USED":
+
+            # Don't make a wire if it's already declared in the bus connection file
+            is_bus = False
+            for bus in self.bus_interface_dict:
+                if wire_name in bus:
+                    is_bus = True
+                    break
+                else:
+                    is_bus = False
+
+            if not (wire_name == "NOT_USED" or wire_name == "TOP" or is_bus):
                 for port in self.portdict:
                     if port == port_name:
                         wire_width = str(self.portdict[port]).split(":")[1]
@@ -158,7 +165,12 @@ class System:
                 bus_type = "d"
 
             if bus_type == 'sys':
-                final_text += "\t." + bus + "\t(wb_" + bus + "),\n"
+                if("clk" in bus):
+                    final_text += "\t." + bus + "\t(" + "wb_clk" + "),\n"
+                elif("rst" in bus):
+                    final_text += "\t." + bus + "\t(" + "wb_rst" + "),\n"
+                else:
+                    print("Wrong system bus type")
             else:
                 wire_name = str(bus).split("_")[1]
                 direction = str(current_buses[bus]).split(":")[0]

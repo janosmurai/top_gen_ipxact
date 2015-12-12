@@ -101,8 +101,7 @@ class UnknownPropertyError(Error):
 def parse_number(s):
     if s.startswith('0x'):
         return int(s, 16)
-    elif s.isnumeric():
-# TODO: it fails if it is not a number -> test this
+    else:
         return int(s)
 
 class Master:
@@ -148,9 +147,9 @@ class Slave:
                 self.datawidth = parse_number(value)
             elif key == 'offset':
                 self.offset = parse_number(value)
-            elif (key == 'size') and (value.isnumeric()):
+            elif key == 'size':
                 self.size = parse_number(value)
-                self.mask = int(~(self.size-1)) & 0xffffffff
+                self.mask = ~(self.size-1) & 0xffffffff
             elif key == 'bustype':
                 if value not in VALID_BUS_TYPES:
                     raise UnsupportedBusTypeError(

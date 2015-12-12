@@ -50,13 +50,14 @@ def set_top_modul_params(is_interactive, auto_mode_param):
         top_modul_instantiation_name = str(top_modul_instantiation_name).replace(" ", "")
         top_module_param_input = auto_mode_param["Top module's parameters"]
         top_module_param_input = str(top_module_param_input).replace(" ", "")
+
+    top_module_param_input = top_module_param_input.replace("\n", "")
+
     if top_module_param_input == "":
-        top_modul_param_list_out.append("module " + top_modul_instantiation_name + " (")
+        top_modul_param_list_out.append("module " + top_modul_instantiation_name + "(")
     else:
-        top_modul_param_list.append("module " + top_modul_instantiation_name + "#(\n")
-        for element in top_module_param_input.split(";"):
-            top_modul_param_list.append(element)
-        for param in top_modul_param_list:
+        top_modul_param_list_out.append("module " + top_modul_instantiation_name + "#(\n")
+        for param in top_module_param_input.split(";"):
             param_to_string = str(param)
             if not param_to_string.startswith("module"):
                 top_modul_param_list_out.append("\tparameter\t" + param + ",\n")
